@@ -1,6 +1,8 @@
 import logging
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
+import logging
+from datetime import datetime
 from homeassistant.helpers.entity import Entity
 from typing import Any, Awaitable, Dict, Iterable, List, Optional
 from homeassistant.helpers.typing import StateType
@@ -24,6 +26,7 @@ from .const import (
     DOMAIN,
 )
 
+_LOGGER = logging.getLogger(__name__)
 
 class KettleEntity(Entity):
 
@@ -41,6 +44,12 @@ class KettleEntity(Entity):
         self._connect = self._config['instance']
         self._name = self._config['name']
         self._state = None
+
+    def log(self, *args, error=False):
+        if error:
+            _LOGGER.error(datetime.strftime("%d.%m.%y %H:%M:%S") + ' '.join([str(a) for a in args]))
+        else:
+            _LOGGER.info(datetime.strftime("%d.%m.%y %H:%M:%S") + ' '.join([str(a) for a in args]))
 
     @property
     def should_poll(self) -> bool:
@@ -66,6 +75,9 @@ class KettleEntity(Entity):
             "manufacturer": self._manufacturer,
             "model": self._model,
             "version": self.VERSION,
+            "connections": {
+                ("mac", self._mac)
+            }
         }
 
     @property

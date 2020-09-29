@@ -90,6 +90,7 @@ class R4SkyKettleSwitch(SwitchEntity, KettleEntity):
 
     def turn_on(self, **kwargs) -> None:
         """Turn the entity on."""
+        self.log('R4SkyKettleSwitch.turn_on')
         self._connect.onModeBoil()
 
     async def async_turn_on(self, **kwargs):
@@ -98,6 +99,7 @@ class R4SkyKettleSwitch(SwitchEntity, KettleEntity):
 
     def turn_off(self, **kwargs):
         """Turn the entity off."""
+        self.log('R4SkyKettleSwitch.turn_off')
         self._connect.off()
 
     async def async_turn_off(self, **kwargs):
@@ -107,9 +109,9 @@ class R4SkyKettleSwitch(SwitchEntity, KettleEntity):
     def toggle(self, **kwargs):
         """Toggle the entity."""
         if self._state:
-            self._connect.off()
+            self.turn_off()
         else:
-            self._connect.on()
+            self.turn_on()
 
     async def async_toggle(self, **kwargs):
         """Toggle the entity."""

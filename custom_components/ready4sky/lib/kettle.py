@@ -2,9 +2,13 @@ from bluepy.btle import BTLEDisconnectError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 import traceback
 import time
+from datetime import datetime
 from .kettle_controller import RedmondKettleController
 from .exception import RedmondKettleConnectException
 from .tool import iteration_decorator
+import logging
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class RedmondKettle():
@@ -43,11 +47,11 @@ class RedmondKettle():
 
     # @iteration_decorator
     def connect(self, permanent=False):
-        self.log('>>>>>>>>>>>>>>>>>>>>>>>>Connect to device with', permanent)
+        self.log('Connect to device with', permanent)
         if permanent:
             try:
                 self._connect.disconnect()
-                self.log('>>>>>>>>>>>>>>>>>>>>>>>>Disconnected device', permanent)
+                self.log('Disconnected device', permanent)
                 pass
             except:
                 pass
@@ -65,25 +69,27 @@ class RedmondKettle():
                         raise Exception('bte.sync() error')
                     self.init_activate = True
             except RedmondKettleConnectException as e:
-                self.log('++++++++++++++RedmondKettleConnectException', e)
+                self.log('RedmondKettleConnectException', e)
                 # print(traceback.format_exc())
                 time.sleep(3)
                 self.connect(permanent=True)
             except BTLEDisconnectError as e:
-                self.log('++++++++++++BTLEDisconnectError', e)
+                self.log('BTLEDisconnectError', e)
                 # print(traceback.format_exc())
                 time.sleep(3)
                 self.connect(permanent=True)
 
         return self._connect
 
-    def log(self, *args):
-        pass
-        # print(' '.join([str(a) for a in args]))
+    def log(self, *args, error=False):
+        if error:
+            _LOGGER.error(datetime.strftime("%d.%m.%y %H:%M:%S") + ' '.join([str(a) for a in args]))
+        else:
+            _LOGGER.info(datetime.strftime("%d.%m.%y %H:%M:%S") + ' '.join([str(a) for a in args]))
 
     # @iteration_decorator
     def paring(self):
-        self.log('>>>>>>>>>>>>>>>>>>>>>>>>CHeck Paring')
+        self.log('CHeck Paring')
         bte = self.connect()
         mode = bte.mode()
         if not mode:
@@ -93,7 +99,7 @@ class RedmondKettle():
 
     # @iteration_decorator
     def mode(self):
-        self.log('>>>>>>>>>>>>>>>>>>>>>>>>CHeck Mode')
+        self.log('CHeck Mode')
         bte = self.connect()
         mode = bte.mode()
         if not mode:
@@ -104,7 +110,7 @@ class RedmondKettle():
 
     # @iteration_decorator
     def stat(self):
-        self.log('>>>>>>>>>>>>>>>>>>>>>>>>CHeck stat')
+        self.log('CHeck stat')
         bte = self.connect()
         stat = bte.stat()
         if not stat:
