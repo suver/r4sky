@@ -41,7 +41,6 @@ class KettleEntity(Entity):
         self._connect = self._config['instance']
         self._name = self._config['name']
         self._state = None
-        print('KettleEntity', self._connect, self.name, self.unique_id)
 
     @property
     def should_poll(self) -> bool:

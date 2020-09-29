@@ -56,7 +56,7 @@ class RedmondKettle():
         if not self._connect:
             try:
                 self._connect = RedmondKettleController(self._mac, self._password, iface=self._iface)
-                self._connect.withDebug()
+                # self._connect.withDebug()
                 self.log('Kettle Connected', self._mac, self._password)
                 if not self._connect.auth():
                     raise Exception('bte.auth() error')
@@ -65,12 +65,12 @@ class RedmondKettle():
                         raise Exception('bte.sync() error')
                     self.init_activate = True
             except RedmondKettleConnectException as e:
-                print('++++++++++++++RedmondKettleConnectException', e)
+                self.log('++++++++++++++RedmondKettleConnectException', e)
                 # print(traceback.format_exc())
                 time.sleep(3)
                 self.connect(permanent=True)
             except BTLEDisconnectError as e:
-                print('++++++++++++BTLEDisconnectError', e)
+                self.log('++++++++++++BTLEDisconnectError', e)
                 # print(traceback.format_exc())
                 time.sleep(3)
                 self.connect(permanent=True)
@@ -78,7 +78,8 @@ class RedmondKettle():
         return self._connect
 
     def log(self, *args):
-        print(' '.join([str(a) for a in args]))
+        pass
+        # print(' '.join([str(a) for a in args]))
 
     # @iteration_decorator
     def paring(self):
@@ -122,7 +123,7 @@ class RedmondKettle():
             raise Exception('bte.on() error')
         self._state_boil = True
         if self._hass:
-            async_dispatcher_send(self._hass, 'r4sky_update')
+            async_dispatcher_send(self._hass, 'ready4sky_update')
         self.log('Kettle ON')
 
     # @iteration_decorator
@@ -133,7 +134,7 @@ class RedmondKettle():
         self._state_boil = False
         self._state_heat = False
         if self._hass:
-            async_dispatcher_send(self._hass, 'r4sky_update')
+            async_dispatcher_send(self._hass, 'ready4sky_update')
         self.log('Kettle OFF')
 
     # @iteration_decorator
@@ -144,7 +145,7 @@ class RedmondKettle():
         self.log('Kettle Temperature Light ON')
         self._water_temperature_light_state = True
         if self._hass:
-            async_dispatcher_send(self._hass, 'r4sky_update')
+            async_dispatcher_send(self._hass, 'ready4sky_update')
         return True
 
     # @iteration_decorator
@@ -155,7 +156,7 @@ class RedmondKettle():
         self.log('Kettle Temperature Light OFF')
         self._water_temperature_light_state = False
         if self._hass:
-            async_dispatcher_send(self._hass, 'r4sky_update')
+            async_dispatcher_send(self._hass, 'ready4sky_update')
         return True
 
     # @iteration_decorator
@@ -169,7 +170,7 @@ class RedmondKettle():
         mode = bte.mode()
         self._update_data_mode(mode)
         if self._hass:
-            async_dispatcher_send(self._hass, 'r4sky_update')
+            async_dispatcher_send(self._hass, 'ready4sky_update')
         self.log('Kettle Heat ON')
 
     # @iteration_decorator
@@ -180,7 +181,7 @@ class RedmondKettle():
             raise Exception('bte.offMode() error')
         self._state_heat = False
         if self._hass:
-            async_dispatcher_send(self._hass, 'r4sky_update')
+            async_dispatcher_send(self._hass, 'ready4sky_update')
         self.log('Kettle Heat OFF')
 
     # @iteration_decorator
@@ -194,7 +195,7 @@ class RedmondKettle():
             raise Exception('bte.onTemperatureToLight() error')
         self._state_boil = True
         if self._hass:
-            async_dispatcher_send(self._hass, 'r4sky_update')
+            async_dispatcher_send(self._hass, 'ready4sky_update')
         self.log('Kettle Boil ON')
 
     # @iteration_decorator
@@ -209,7 +210,7 @@ class RedmondKettle():
             raise Exception('bte.onMode() error')
         self._light_state = True
         if self._hass:
-            async_dispatcher_send(self._hass, 'r4sky_update')
+            async_dispatcher_send(self._hass, 'ready4sky_update')
         self.log('Kettle Light ON')
 
     # @iteration_decorator
@@ -220,7 +221,7 @@ class RedmondKettle():
             raise Exception('bte.offMode() error')
         self._light_state = False
         if self._hass:
-            async_dispatcher_send(self._hass, 'r4sky_update')
+            async_dispatcher_send(self._hass, 'ready4sky_update')
         self.log('Kettle Light OFF')
 
     def _update_data_mode(self, mode):
@@ -245,4 +246,4 @@ class RedmondKettle():
             self._started_count = stat['count']
 
         if self._hass:
-            async_dispatcher_send(self._hass, 'r4sky_update')
+            async_dispatcher_send(self._hass, 'ready4sky_update')

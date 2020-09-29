@@ -43,32 +43,11 @@ class R4SkyKettleWaterHeater(WaterHeaterEntity, KettleEntity):
     _temperature_unit = TEMP_CELSIUS
     _current_operation = STATE_OFF
 
-    # def __init__(self, config, device):
-    #     """Initialize an AwesomeLight."""
-    #     # The minimum temperature that can be set.
-    #     self._min_temp = 40
-    #     # The maximum temperature that can be set.
-    #     self._max_temp = 90
-    #     # The current temperature.
-    #     self._current_temperature = 0
-    #     # The temperature we are trying to reach.
-    #     self._target_temperature = 0
-    #     self._temperature_unit = TEMP_CELSIUS
-    #     # The current operation mode.
-    #     self._current_operation = STATE_OFF
-    #     self._config = config
-    #     self._device = device
-    #     self._name = ' '.join(['Water Heater', self._config['name']])
-    #     self._info = {}
-    #     self._connect = self._config['instance']
-    #     print('Water Heater Kettle', self._name, self._connect)
-
     async def async_added_to_hass(self):
         self._handle_update()
-        self.async_on_remove(async_dispatcher_connect(self.hass, 'r4sky_update', self._handle_update))
+        self.async_on_remove(async_dispatcher_connect(self.hass, 'ready4sky_update', self._handle_update))
 
     def _handle_update(self):
-        print('R4SkyKettleWaterHeater _handle_update', self._connect._state_heat)
         self._state = self._connect._state_heat
         self._current_temperature = self._connect._current_temperature
         self._target_temperature = self._connect._target_temperature
@@ -148,9 +127,7 @@ class R4SkyKettleWaterHeater(WaterHeaterEntity, KettleEntity):
     def set_temperature(self, **kwargs):
         '''Sets the temperature the water heater should heat water to.'''
         self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
-        print('set temperature', self._state, self._target_temperature)
         if self._state:
-            print('set temperature update')
             self._connect.offModeHeat()
             self._connect.onModeHeat(temperature=self._target_temperature)
 
@@ -201,14 +178,3 @@ class R4SkyKettleWaterHeater(WaterHeaterEntity, KettleEntity):
     async def async_toggle(self, **kwargs):
         """Toggle the entity."""
         self.toggle()
-
-    # async def async_update(self):
-    #     """Fetch new state data for this light.
-    #     This is the only method that should fetch new data for Home Assistant.
-    #     """
-    #     print('Update Water Heater')
-    #     print('Instance update', self._connect)
-    #     info = self._connect.mode()
-    #     if info:
-    #         self._current_temperature = info['current_temperature']
-    #         self._current_operation = STATE_ELECTRIC if info['mode'] == 'heat' and info['status'] == 'on' else STATE_OFF

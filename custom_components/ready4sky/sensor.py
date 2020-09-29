@@ -27,10 +27,9 @@ class R4SkyKettleSensor(KettleEntity):
 
     async def async_added_to_hass(self):
         self._handle_update()
-        self.async_on_remove(async_dispatcher_connect(self.hass, 'r4sky_update', self._handle_update))
+        self.async_on_remove(async_dispatcher_connect(self.hass, 'ready4sky_update', self._handle_update))
 
     def _handle_update(self):
-        print('R4SkyKettleSensor _handle_update', self._connect._current_temperature)
         self._state = self._connect._current_temperature
         self.schedule_update_ha_state()
 
@@ -42,12 +41,11 @@ class R4SkyKettleSensor(KettleEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"Sensor {self._name}"
+        return f"{self._name}"
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        print('self._connect', self._connect._current_temperature)
         return self._state
 
     @property

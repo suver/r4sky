@@ -38,10 +38,9 @@ class R4SkyKettleLight(LightEntity, KettleEntity):
     async def async_added_to_hass(self):
         await super().async_added_to_hass()
         self._handle_update()
-        self.async_on_remove(async_dispatcher_connect(self.hass, 'r4sky_update', self._handle_update))
+        self.async_on_remove(async_dispatcher_connect(self.hass, 'ready4sky_update', self._handle_update))
 
     def _handle_update(self):
-        print('R4SkyKettleLight _handle_update', self._connect._light_state)
         self._state = self._connect._light_state
         self.schedule_update_ha_state()
 
@@ -69,7 +68,7 @@ class R4SkyKettleLight(LightEntity, KettleEntity):
     @property
     def name(self):
         """Return the display name of this light."""
-        return f"Light {self._name}"
+        return f"{self._name}"
 
     @property
     def brightness(self):
@@ -89,23 +88,17 @@ class R4SkyKettleLight(LightEntity, KettleEntity):
         You can skip the brightness part if your light does not support
         brightness control.
         """
-        print('Instance turn_on', self._connect)
-        print('kwargs', kwargs)
         color = '27FF00'
         if ATTR_HS_COLOR in kwargs:
             _hs = kwargs[ATTR_HS_COLOR]
-            print('_hs', self.hs_to_rgbhex(_hs))
             color = self.hs_to_rgbhex(_hs)
         self._connect.onLight(rgb1=color, rgb2=color, rgb3=color)
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
-        print('Instance turn_off', self._connect)
-        print('kwargs', kwargs)
         color = '27FF00'
         if ATTR_HS_COLOR in kwargs:
             _hs = kwargs[ATTR_HS_COLOR]
-            print('_hs', self.hs_to_rgbhex(_hs))
             color = self.hs_to_rgbhex(_hs)
         self._connect.offLight(rgb1=color, rgb2=color, rgb3=color)
 
@@ -117,7 +110,7 @@ class R4SkyKettleWaterTemperatureLight(LightEntity, KettleEntity):
 
     async def async_added_to_hass(self):
         self._handle_update()
-        self.async_on_remove(async_dispatcher_connect(self.hass, 'r4sky_update', self._handle_update))
+        self.async_on_remove(async_dispatcher_connect(self.hass, 'ready4sky_update', self._handle_update))
 
     def _handle_update(self):
         self._state = self._connect._water_temperature_light_state
@@ -152,7 +145,7 @@ class R4SkyKettleWaterTemperatureLight(LightEntity, KettleEntity):
     @property
     def name(self):
         """Return the display name of this light."""
-        return f"Water Temperature Light {self._name}"
+        return f"Water Temperature {self._name}"
 
     # @property
     # def brightness(self):
@@ -172,15 +165,10 @@ class R4SkyKettleWaterTemperatureLight(LightEntity, KettleEntity):
         You can skip the brightness part if your light does not support
         brightness control.
         """
-        print('Instance turn_on', self._connect)
-        print('kwargs', kwargs)
         if self._connect.onTemperatureToLight():
             self._state = True
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
-        # connect = self._connect.connect()
-        print('Instance turn_off', self._connect)
-        print('kwargs', kwargs)
         if self._connect.offTemperatureToLight():
             self._state = False

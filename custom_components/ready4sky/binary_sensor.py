@@ -2,10 +2,12 @@
 import logging
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity
 )
 from . import DOMAIN
+from .kettle_entity import KettleEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,23 +18,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
     sensors = []
     for device in hass.data[DOMAIN]:
-        sensors.append(R4SkyKettleBinarySensor(hass.data[DOMAIN][device], device))
+        sensors.append(R4SkyKettleBinarySensor(hass.data[DOMAIN][device]))
     if len(sensors) > 0:
         add_entities(sensors)
 
 
-class R4SkyKettleBinarySensor(BinarySensorEntity):
+class R4SkyKettleBinarySensor(BinarySensorEntity, KettleEntity):
     """Representation of a sensor."""
 
-    def __init__(self, config, device):
-        """Initialize the sensor."""
-        self._state = None
-        self._config = config
-        self._device = device
-        self._name = ' '.join(['Binary', 'Sensor', self._config['name']])
-        self._connect = self._config['instance']
-        # self._connect = self._config['class'].getInstance(self._config['mac'], self._config['password'])
-        print('BinarySensor Kettle', self._name, self._connect)
+    async def async_added_to_hass(self):
+        self._handle_update()
+        self.async_on_remove(async_dispatcher_connect(self.hass, 'ready4sky_update', self._handle_update))
+
+    def _handle_update(self):
+        # print('R4SkyKettleBinarySensor _handle_update', self._connect._current_temperature)
+        self._state = self._connect._current_temperature
+        self.schedule_update_ha_state()
 
     @property
     def icon(self):
@@ -52,7 +53,7 @@ class R4SkyKettleBinarySensor(BinarySensorEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._state
+        return True if self._connect._state_boil or self._connect._state_heat else False
 
     def update(self):
         print('Update Sensor')
