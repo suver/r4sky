@@ -1,0 +1,9 @@
+{
+  "domain": "ready4sky",
+  "name": "Redmond Ready For Sky Integration",
+  "documentation": "https://github.com/suver/r4sky",
+  "dependencies": [],
+  "codeowners": ["@suver"],
+  "requirements": ["bluepy"],
+  "config_flow": true
+}

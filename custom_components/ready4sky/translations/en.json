@@ -1,0 +1,58 @@
+{
+  "options": {
+    "title": "Redmond SkyKettle",
+    "step": {
+      "init": {
+        "title": "Setup a bluetooth interface and device type",
+        "description": "Details can be found here:\nhttps://github.com/suver/r4sky",
+        "data": {
+          "device": "Bluetooth device",
+          "temperatureLight": "Teapot water temperature display"
+        }
+      }
+    }
+  },
+  "config": {
+    "title": "Redmond SkyKettle",
+    "step": {
+      "init": {
+        "title": "Setup a bluetooth interface and device type",
+        "description": "Details can be found here:\nhttps://github.com/suver/r4sky",
+        "data": {
+          "device": "Bluetooth device"
+        }
+      },
+      "user": {
+        "title": "Setup a bluetooth interface and device type",
+        "description": "Details can be found here:\nhttps://github.com/suver/r4sky",
+        "data": {
+          "device": "Bluetooth device"
+        }
+      },
+      "configure": {
+        "title": "Setup a new device",
+        "description": "Details can be found here:\nhttps://github.com/suver/r4sky",
+        "data": {
+          "device": "Bluetooth device",
+          "mac": "Device's name and address",
+          "password": "Password (8 byte length and HEX)",
+          "scan_interval": "Scan interval (from 10 to 300 seconds)",
+          "use_backlight": "use backlight in standby mode (for supported devices)"
+        }
+      },
+      "paring": {
+        "title": "First connect to device...",
+        "description": "put the device into pairing mode according to the instructions, and then press CONFIRM"
+      }
+    },
+    "error": {
+      "wrong_password": "Password is not valid (8 byte length and HEX)",
+      "wrong_mac": "MAC is malformed",
+      "wrong_scan_interval": "Scan interval should be from 10 to 300 seconds",
+      "wrong_pairing": "Do not connected to device"
+    },
+    "abort": {
+      "already_configured": "Integration for this device is already configured"
+    }
+  }
+}
