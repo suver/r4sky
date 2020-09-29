@@ -83,9 +83,9 @@ class RedmondKettle():
 
     def log(self, *args, error=False):
         if error:
-            _LOGGER.error(datetime.strftime("%d.%m.%y %H:%M:%S") + ' '.join([str(a) for a in args]))
-        else:
-            _LOGGER.info(datetime.strftime("%d.%m.%y %H:%M:%S") + ' '.join([str(a) for a in args]))
+            _LOGGER.error(datetime.today().strftime("%d.%m.%y %H:%M:%S") + ' '.join([str(a) for a in args]))
+        # else:
+        #     _LOGGER.info(datetime.today().strftime("%d.%m.%y %H:%M:%S") + ' '.join([str(a) for a in args]))
 
     # @iteration_decorator
     def paring(self):
