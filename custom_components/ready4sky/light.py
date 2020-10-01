@@ -121,11 +121,6 @@ class R4SkyKettleWaterTemperatureLight(LightEntity, KettleEntity):
         """Icon is a lightning bolt."""
         return "mdi:lightbulb-on" if self.is_on else "mdi:lightbulb-on-outline"
 
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
-
     # def rgbhex_to_hs(self, rgbhex):
     #     rgb = color_util.rgb_hex_to_rgb_list(rgbhex)
     #     return color_util.color_RGB_to_hs(*rgb)

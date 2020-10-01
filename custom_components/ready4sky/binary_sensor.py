@@ -56,8 +56,6 @@ class R4SkyKettleBinarySensor(BinarySensorEntity, KettleEntity):
         return True if self._connect._state_boil or self._connect._state_heat else False
 
     def update(self):
-        print('Update Sensor')
-        print('Instance update', self._connect)
         info = self._connect.mode()
         if info:
             self._state = True if info['status'] == 'on' else False

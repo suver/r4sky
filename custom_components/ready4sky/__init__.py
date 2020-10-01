@@ -27,6 +27,8 @@ from homeassistant.const import (
 
 from .const import DOMAIN, SUPPORTED_PLATFORMS
 from .lib import RedmondKettle
+import logging
+_LOGGER = logging.getLogger(__name__)
 
 
 PLATFORM_SCHEMA = vol.Schema(
@@ -35,8 +37,7 @@ PLATFORM_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass, config):
-    print("Setup: SkyKettle RK-G210S")
-    print('config', config)
+    _LOGGER.info(f"Start async_setup")
     return True
 
 async def async_remove_entry(hass, entry):
@@ -44,13 +45,12 @@ async def async_remove_entry(hass, entry):
         for platform in SUPPORTED_PLATFORMS:
             await hass.config_entries.async_forward_entry_unload(entry, platform)
     except ValueError as e:
-        print('ValueError', e)
+        _LOGGER.error(f"ValueError {e}")
 
 async def async_setup_entry(hass, config_entry):
     hass.data[DOMAIN] = {}
 
     config = config_entry.data
-    print('config', config)
 
     mac = config.get(CONF_MAC)
     uniqueId = config.get(CONF_UNIQUE_ID)
@@ -63,13 +63,8 @@ async def async_setup_entry(hass, config_entry):
     name = config.get(CONF_NAME)
     temperatureLight = config.get(CONF_TEMPERATURE_LIGHT, True)
     scan_delta = timedelta(seconds=config.get(CONF_SCAN_INTERVAL))
-    print('mac', mac)
-    print('device', device)
-    print('uniqueId', uniqueId)
-    print('iface_name', iface_name)
-    print('iface_index', iface_index)
-    print('password', password)
-    print('scan_delta', scan_delta)
+
+    _LOGGER.info(f"Start ready4sky[{name}] uniqueId:{uniqueId} mac:{mac} iface_index:{iface_index} password:{password}")
 
     # hass.states.async_set("r4sky.name", "SkyKettle RK-G210S")
 
@@ -101,90 +96,5 @@ async def async_setup_entry(hass, config_entry):
 
     for platform in SUPPORTED_PLATFORMS:
         hass.helpers.discovery.load_platform(platform, DOMAIN, {}, hass.data[DOMAIN][mac])
-        # hass.async_create_task(
-        #     hass.config_entries.async_forward_entry_setup(hass.data[DOMAIN][mac], domain)
-        # )
-
-    # hass.helpers.discovery.load_platform('sensor', DOMAIN, {}, config)
-    # hass.helpers.discovery.load_platform('light', DOMAIN, {}, config)
-    # hass.helpers.discovery.load_platform('switch', DOMAIN, {}, config)
-    # hass.helpers.discovery.load_platform('binary_sensor', DOMAIN, {}, config)
-    # hass.helpers.discovery.load_platform('water_heater', DOMAIN, {}, config)
 
     return True
-
-
-    # mac = config.get(CONF_MAC)
-    # device = config.get(CONF_DEVICE)
-    # password = config.get(CONF_PASSWORD)
-    # scan_delta = timedelta(seconds=config.get(CONF_SCAN_INTERVAL))
-    # backlight = config.get(CONF_USE_BACKLIGHT)
-    #
-    # device_registry = await dr.async_get_registry(hass)
-    # device_registry.async_get_or_create(
-    #     config_entry_id=config_entry.entry_id,
-    #     connections={(dr.CONNECTION_NETWORK_MAC, mac)},
-    #     name="ReadyForSky",
-    #     model="ReadyForSky",
-    #     manufacturer="Redmond"
-    # )
-    #
-    # kettler = hass.data[DOMAIN]["kettler"] = RedmondKettler(
-    #     hass,
-    #     mac,
-    #     password,
-    #     device,
-    #     backlight
-    # )
-    #
-    # try:
-    #     await kettler.async_firstConnect()
-    # except:
-    #     _LOGGER.error("Connect to Kettler %s through device %s failed", mac, device)
-    #     return False
-    #
-    # async_track_time_interval(hass, kettler.async_update, scan_delta)
-    #
-    # for domain in SUPPORTED_DOMAINS:
-    #     hass.async_create_task(
-    #         hass.config_entries.async_forward_entry_setup(config_entry, domain)
-    #     )
-    #
-    # return True
-
-
-# async def async_setup_entry(hass, config_entry):
-#     print('config_entry', config_entry)
-#
-#     device_registry = await dr.async_get_registry(hass)
-#     print('device_registry', device_registry)
-#     # device_registry.async_get_or_create(
-#     #     config_entry_id=config_entry.entry_id,
-#     #     connections={(dr.CONNECTION_NETWORK_MAC, mac)},
-#     #     name="ReadyForSky",
-#     #     model="ReadyForSky",
-#     #     manufacturer="Redmond"
-#     # )
-#     # print('device_registry', device_registry)
-#
-#     print('hass.data[DOMAIN]', hass.data[DOMAIN])
-#
-#
-#
-#     # async_track_time_interval(hass, kettler.async_update, scan_delta)
-#     #
-#     for domain in SUPPORTED_DOMAINS:
-#         hass.async_create_task(
-#             hass.config_entries.async_forward_entry_setup(config_entry, domain)
-#         )
-#     #
-#     # return True
-#
-#
-# async def async_remove_entry(hass, entry):
-#     try:
-#         for domain in SUPPORTED_DOMAINS:
-#             await hass.config_entries.async_forward_entry_unload(entry, domain)
-#     except ValueError:
-#         pass
-

@@ -1,8 +1,7 @@
-import logging
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 import logging
-from datetime import datetime
+import traceback
 from homeassistant.helpers.entity import Entity
 from typing import Any, Awaitable, Dict, Iterable, List, Optional
 from homeassistant.helpers.typing import StateType
@@ -45,11 +44,15 @@ class KettleEntity(Entity):
         self._name = self._config['name']
         self._state = None
 
-    def log(self, *args, error=False):
+    def log(self, *args, msg='', level=1, error=False, log=False, debug=False):
         if error:
-            _LOGGER.error(datetime.today().strftime("%d.%m.%y %H:%M:%S") + ' '.join([str(a) for a in args]))
-        # else:
-        #     _LOGGER.info(datetime.today().strftime("%d.%m.%y %H:%M:%S") + ' '.join([str(a) for a in args]))
+            _LOGGER.error(' '.join([str(a) for a in args]) + "\n" + traceback.format_exc())
+        if log:
+            _LOGGER.log(level, msg, args, traceback=traceback.format_exc())
+        if debug:
+            _LOGGER.debug(level, msg, args, traceback=traceback.format_exc())
+        else:
+            _LOGGER.info(' '.join([str(a) for a in args]))
 
     @property
     def should_poll(self) -> bool:
@@ -140,7 +143,7 @@ class KettleToggleEntity(KettleEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         assert self.hass is not None
-        await self.hass.async_add_executor_job(ft.partial(self.turn_on, **kwargs))
+        # await self.hass.async_add_executor_job(ft.partial(self.turn_on, **kwargs))
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
@@ -149,7 +152,7 @@ class KettleToggleEntity(KettleEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         assert self.hass is not None
-        await self.hass.async_add_executor_job(ft.partial(self.turn_off, **kwargs))
+        # await self.hass.async_add_executor_job(ft.partial(self.turn_off, **kwargs))
 
     def toggle(self, **kwargs: Any) -> None:
         """Toggle the entity."""

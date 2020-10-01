@@ -115,10 +115,12 @@ class R4SkyKettleWaterHeater(WaterHeaterEntity, KettleEntity):
 
     def set_operation_modeor(self, **kwargs):
         '''Sets the operation mode of the water heater. Must be in the operation_list.'''
-        self._state = kwargs.get(ATTR_OPERATION_MODE)
-        if self._state:
+        _state = kwargs.get(ATTR_OPERATION_MODE)
+        if _state == STATE_ELECTRIC:
+            self._state = True
             self._connect.onModeHeat(temperature=self._target_temperature)
-        elif not self._state:
+        elif _state == STATE_OFF:
+            self._state = False
             self._connect.offModeHeat()
 
     def async_set_operation_mode(self, **kwargs):

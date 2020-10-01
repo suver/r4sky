@@ -2,7 +2,6 @@ from .bte import BTEConnect
 from .exception import RedmondKettleException, RedmondKettleConnectException
 import binascii
 from textwrap import wrap
-from datetime import datetime
 import time
 from bluepy.btle import BTLEException, BTLEDisconnectError, BTLEInternalError
 import logging
@@ -39,8 +38,8 @@ class RedmondKettleController:
             _LOGGER.info(' '.join([str(a) for a in args]))
 
     def debug(self, msg, *args):
-        # if self._withDebug:
-        self.log(msg, *args, log=True)
+        if self._withDebug:
+            self.log(msg, *args, debug=True)
 
     def hexToDec(self, chr):
         return int(str(chr), 16)
@@ -61,30 +60,37 @@ class RedmondKettleController:
         self.debug('auth:')
         try:
             # подписываемся на обмен сообщениями
-            # str2b = binascii.a2b_hex(bytes('0100', 'utf-8'))
-            # self._conn.Peripheral.writeCharacteristic(0x000c, str2b, withResponse=True)
+            str2b = binascii.a2b_hex(bytes('0100', 'utf-8'))
+            self._conn.Peripheral.writeCharacteristic(0x000c, str2b, withResponse=True)
             # авторизуенмся
-            response = self._conn.send('55' + self.decToHex(self._iter) + 'ff' + self._key + 'aa')
+            str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + 'ff' + self._key + 'aa', 'utf-8'))
+            self._conn.Peripheral.writeCharacteristic(14, str2b, withResponse=True)
+            self._conn.Peripheral.waitForNotifications(5.0)
             self.iterase()
+            self.debug('notify', self._conn.notify)
 
-            # s = binascii.b2a_hex(response[0:]).decode("utf-8")
-            arr = [response[x:x + 2] for x in range(0, len(response), 2)]
-            self.log('notify arr', arr)
+
+            s = binascii.b2a_hex(self._conn.notify[0:]).decode("utf-8")
+            arr = [s[x:x + 2] for x in range(0, len(s), 2)]
+            self.debug(arr)
 
             return True if str(arr[3]) == '01' else False
         except BTLEDisconnectError as e:
-            self.log('Error BTLEDisconnectError:', e, error=True)
+            self.log('Error BTLEDisconnectError:', e, self._conn.notify if self._conn.notify else [], error=True)
             # print(traceback.format_exc())
             raise RedmondKettleConnectException(e)
         except BaseException as e:
-            self.log('Error:', e, error=True)
+            self.log('Error:', e, self._conn.notify if self._conn.notify else [], error=True)
         return False
 
     def on(self):
         ''' Включаем чайник '''
         self.debug('on:')
         try:
-            response = self._conn.send('55' + self.decToHex(self._iter) + '03aa')
+            str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '03aa', 'utf-8'))
+            self._conn.Peripheral.writeCharacteristic(14, str2b, withResponse=True)
+            self._conn.Peripheral.waitForNotifications(2.0)
+            self.debug('notify', self._conn.notify)
             self.iterase()
             return True
         except BTLEDisconnectError as e:
@@ -100,7 +106,10 @@ class RedmondKettleController:
         ''' Выключаем чайник '''
         self.debug('off:')
         try:
-            response = self._conn.send('55' + self.decToHex(self._iter) + '04aa')
+            str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '04aa', 'utf-8'))
+            self._conn.Peripheral.writeCharacteristic(14, str2b, withResponse=True)
+            self._conn.Peripheral.waitForNotifications(2.0)
+            self.debug('notify', self._conn.notify)
             self.iterase()
             return True
         except BTLEDisconnectError as e:
@@ -123,8 +132,10 @@ class RedmondKettleController:
         timeNow_str = ''
         for i in reversed(timeNow_list):
             timeNow_str+=i
+        str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '6e' + timeNow_str + tmz_str + '0000aa', 'utf-8'))
         try:
-            response = self._conn.send('55' + self.decToHex(self._iter) + '6e' + timeNow_str + tmz_str + '0000aa')
+            self._conn.Peripheral.writeCharacteristic(14, str2b, withResponse=True)
+            self._conn.Peripheral.waitForNotifications(2.0)
             self.iterase()
             return True
         except BTLEDisconnectError as e:
@@ -144,15 +155,25 @@ class RedmondKettleController:
         self.debug('stat:')
         try:
             # self._conn.setDelegate(NotifyStatusDelegate())
-            response = self._conn.send('55' + self.decToHex(self._iter) + '4700aa')
+            str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '4700aa', 'utf-8'))
+            self._conn.Peripheral.writeCharacteristic(14, str2b, withResponse=True)
+            self._conn.Peripheral.waitForNotifications(2.0)
             self.iterase()
-            arr = [response[x:x + 2] for x in range(0, len(response), 2)]
+            self.debug('notify', self._conn.notify)
+
+            s = binascii.b2a_hex(self._conn.notify).decode("utf-8")
+            arr = [s[x:x + 2] for x in range(0, len(s), 2)]
+            self.debug(arr)
             energy_kwh = self.hexToDec(str(arr[11] + arr[10] + arr[9]))
             time = round(energy_kwh / 2200, 1)
 
-            response = self._conn.send('55' + self.decToHex(self._iter) + '5000aa')
+            str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '5000aa', 'utf-8'))
+            self._conn.Peripheral.writeCharacteristic(14, str2b, withResponse=True)
+            self._conn.Peripheral.waitForNotifications(2.0)
             self.iterase()
-            arr = [response[x:x + 2] for x in range(0, len(response), 2)]
+            self.debug('notify', self._conn.notify)
+            s = binascii.b2a_hex(self._conn.notify).decode("utf-8")
+            arr = [s[x:x + 2] for x in range(0, len(s), 2)]
             self.debug(arr)
             count = self.hexToDec(str(arr[7] + arr[6]))
 
@@ -176,11 +197,15 @@ class RedmondKettleController:
         ''' Получаем текущий режим работы чайника '''
         self.debug('mode:')
         try:
-            response = self._conn.send('55' + self.decToHex(self._iter) + '06aa')
+            str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '06aa', 'utf-8'))
+            self._conn.Peripheral.send(str2b)
+            # self._conn.Peripheral.writeCharacteristic(14, str2b, withResponse=True)
+            # self._conn.Peripheral.waitForNotifications(2.0)
             self.iterase()
             self.debug('notify', self._conn.notify)
 
-            arr = [response[x:x + 2] for x in range(0, len(response), 2)]
+            s = binascii.b2a_hex(self._conn.notify[0:]).decode("utf-8")
+            arr = [s[x:x + 2] for x in range(0, len(s), 2)]
             self.debug(arr)
             status = str(arr[11]) if len(arr) > 11 else str(arr[3])
             current_temperature = self.hexToDec(str(arr[8])) if len(arr) > 11 else str(0)
@@ -242,11 +267,14 @@ class RedmondKettleController:
             if mode == 'heat' and (temperature < 40 or temperature > 95):
                 raise RedmondKettleException('Temp must be > 40 and < 95')
 
-            response = self._conn.send('55' + self.decToHex(self._iter) + '06aa')
+            str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '06aa', 'utf-8'))
+            self._conn.Peripheral.writeCharacteristic(14, str2b, withResponse=True)
+            self._conn.Peripheral.waitForNotifications(2.0)
             self.iterase()
-            self.log('sendMode -notify', response, log=True)
+            self.debug('notify', self._conn.notify)
 
-            arr = [response[x:x + 2] for x in range(0, len(response), 2)]
+            s = binascii.b2a_hex(self._conn.notify[0:]).decode("utf-8")
+            arr = [s[x:x + 2] for x in range(0, len(s), 2)]
 
             modeBitesDict = {
                 'boil': '00',
@@ -266,6 +294,27 @@ class RedmondKettleController:
             arr[2] = '05'
             arr[3] = modeBitesDict.get(mode, '00') # программа
             arr[4] = '00' # sprog под программа программа
+            '''
+status, 00, temperature, 0, current_temperature, 58, mode, 03, time, 80, 00
+sendRGBLight:
+notify, b'U\x112\x00\xaa'
+sendMode:
+notify, b'U\x112\x00\xaa'
+Error:, list assignment index out of range
+Traceback (most recent call last):
+  File "/home/suver/project/homekit/core/config/custom_components/r4sky/lib/kettle_controller.py", line 273, in sendMode
+    arr[5] = tempBite
+IndexError: list assignment index out of range
+
+bte.sendMode() error
+Traceback (most recent call last):
+  File "/home/suver/project/homekit/core/config/custom_components/r4sky/lib/tool.py", line 16, in wrapper
+    result = method(*args, **kwargs)
+  File "/home/suver/project/homekit/core/config/custom_components/r4sky/lib/kettle.py", line 124, in onLight
+    raise Exception('bte.sendMode() error')
+Exception: bte.sendMode() error
+
+            '''
             arr[5] = tempBite
             # arr[6] = '00' # hours
             # arr[7] = '00' # minutes
@@ -275,13 +324,15 @@ class RedmondKettleController:
 
             self.debug('sendMode', ''.join(arr))
             str2b = binascii.a2b_hex(bytes(''.join(arr), 'utf-8'))
-            response = self._conn.send('55' + self.decToHex(self._iter) + '05' + modeBitesDict.get(mode, '00') + '00' + tempBite +
-                                           '00000000000000000000' + howMuchBoilBite + '0000aa')
+            str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '05' + modeBitesDict.get(mode, '00') + '00' + tempBite +
+                                           '00000000000000000000' + howMuchBoilBite + '0000aa', 'utf-8'))
+            self._conn.Peripheral.writeCharacteristic(14, str2b, withResponse=True)
+            self._conn.Peripheral.waitForNotifications(2.0)
             self.iterase()
             self.debug('notify', self._conn.notify)
 
-            # s = binascii.b2a_hex(self._conn.notify[0:]).decode("utf-8")
-            arr = [response[x:x + 2] for x in range(0, len(response), 2)]
+            s = binascii.b2a_hex(self._conn.notify[0:]).decode("utf-8")
+            arr = [s[x:x + 2] for x in range(0, len(s), 2)]
             self.debug(arr)
             status = str(arr[3])
 
@@ -316,10 +367,14 @@ class RedmondKettleController:
         '''
         self.debug('onMode:')
         try:
-            response = self._conn.send('55' + self.decToHex(self._iter) + '03aa')
+            str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '03aa', 'utf-8'))
+            self._conn.Peripheral.writeCharacteristic(14, str2b, withResponse=True)
+            self._conn.Peripheral.waitForNotifications(2.0)
             self.iterase()
+            self.debug('notify', self._conn.notify)
 
-            arr = [response[x:x + 2] for x in range(0, len(response), 2)]
+            s = binascii.b2a_hex(self._conn.notify[0:]).decode("utf-8")
+            arr = [s[x:x + 2] for x in range(0, len(s), 2)]
             self.debug(arr)
             status = str(arr[3])
 
@@ -351,10 +406,14 @@ class RedmondKettleController:
         '''
         self.debug('offMode:')
         try:
-            response = self._conn.send('55' + self.decToHex(self._iter) + '04aa')
+            str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '04aa', 'utf-8'))
+            self._conn.Peripheral.writeCharacteristic(14, str2b, withResponse=True)
+            self._conn.Peripheral.waitForNotifications(2.0)
             self.iterase()
+            self.debug('notify', self._conn.notify)
 
-            arr = [response[x:x + 2] for x in range(0, len(response), 2)]
+            s = binascii.b2a_hex(self._conn.notify[0:]).decode("utf-8")
+            arr = [s[x:x + 2] for x in range(0, len(s), 2)]
             self.debug(arr)
             status = str(arr[3])
 
@@ -384,8 +443,11 @@ class RedmondKettleController:
         ''' Отображение текущей температуры цветом в простое ON '''
         self.debug('onTemperatureToLight:')
         try:
-            response = self._conn.send('55' + self.decToHex(self._iter) + '37c8c801aa')
+            str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '37c8c801aa', 'utf-8'))
+            self._conn.Peripheral.writeCharacteristic(14, str2b, withResponse=True)
+            self._conn.Peripheral.waitForNotifications(2.0)
             self.iterase()
+            self.debug('notify', self._conn.notify)
             return True
         except BTLEDisconnectError as e:
             self.log('Error BTLEDisconnectError:', e, error=True)
@@ -402,8 +464,11 @@ class RedmondKettleController:
         ''' Отображение текущей температуры цветом в простое OFF '''
         self.debug('offTemperatureToLight:')
         try:
-            response = self._conn.send('55' + self.decToHex(self._iter) + '37c8c800aa')
+            str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '37c8c800aa', 'utf-8'))
+            self._conn.Peripheral.writeCharacteristic(14, str2b, withResponse=True)
+            self._conn.Peripheral.waitForNotifications(2.0)
             self.iterase()
+            self.debug('notify', self._conn.notify)
             return True
         except BTLEDisconnectError as e:
             self.log('Error BTLEDisconnectError:', e, e, error=True)
@@ -433,11 +498,14 @@ class RedmondKettleController:
                 'light': '01'
             }
             boilOrLightBit = boilOrLightDict.get(mode, 00)
-            response = self._conn.send('55' + self.decToHex(self._iter) + '32' + boilOrLightBit +
+            str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '32' + boilOrLightBit +
                                            scaleLight[0] + rand + rgb1 +
                                            scaleLight[1] + rand + rgb2 +
-                                           scaleLight[2] + rand + rgb3 + 'aa')
+                                           scaleLight[2] + rand + rgb3 + 'aa', 'utf-8'))
+            self._conn.Peripheral.writeCharacteristic(14, str2b, withResponse=True)
+            self._conn.Peripheral.waitForNotifications(2.0)
             self.iterase()
+            self.debug('notify', self._conn.notify)
             return True
         except BTLEDisconnectError as e:
             self.log('Error BTLEDisconnectError:', e, error=True)
@@ -462,9 +530,14 @@ class RedmondKettleController:
                 'light': '01'
             }
             boilOrLightBit = boilOrLightDict[mode] if mode in boilOrLightDict else mode
-            response = self._conn.send('55' + self.decToHex(self._iter) + '33' + boilOrLightBit + 'aa')
+            str2b = binascii.a2b_hex(bytes('55' + self.decToHex(self._iter) + '33' + boilOrLightBit + 'aa', 'utf-8'))
+            self._conn.Peripheral.writeCharacteristic(14, str2b, withResponse=True)
+            self._conn.Peripheral.waitForNotifications(2.0)
             self.iterase()
-            arr = [response[x:x + 2] for x in range(0, len(response), 2)]
+            self.debug('notify', self._conn.notify)
+            s = binascii.b2a_hex(self._conn.notify[0:]).decode("utf-8")
+            arr = [s[x:x + 2] for x in range(0, len(s), 2)]
+            self.debug(arr)
 
             temperatureStart = self.hexToDec(str(arr[4]))
             randStart = str(arr[5])
