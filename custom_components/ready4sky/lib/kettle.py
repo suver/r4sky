@@ -283,7 +283,8 @@ class RedmondKettle():
             self._target_temperature = mode['temperature']
 
     def update(self, *args, **kwargs):
-        if self._touch_time <= time.time():
+        self.log('Time Self Update', self._touch_time, time.time())
+        if self._touch_time >= time.time():
             return
         try:
             self.log('Update', args, kwargs)
